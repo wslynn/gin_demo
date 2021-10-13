@@ -1,28 +1,41 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
+	"fmt"
+	"html/template"
+	"net/http"
 )
 
 func main() {
-	r := gin.Default() // 返回默认的路由引擎
-	r.GET("/hello", sayHello)
-	r.GET("/book", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "get",
-		})
-	})
-	r.POST("/book", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "post",
-		})
-	})
-
-	r.Run(":9090")
+	http.HandleFunc("/hello", sayHello)
+	err := http.ListenAndServe(":9090", nil)
+	if err != nil {
+		fmt.Printf("http serve failed, err:%v", err)
+		return
+	}
 }
 
-func sayHello(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "Hello golang!",
-	})
+func sayHello(w http.ResponseWriter, r *http.Request) {
+	// 读取模板文件
+	t, err := template.ParseFiles("./hello.tmpl")
+	if err != nil {
+		fmt.Println("ParseFiles failed, err:%v", err)
+		return
+	}
+	// 渲染模板, .表示当前对象
+	err = t.Execute(w, "小王")
+	if err != nil {
+		fmt.Println("Execute failed, err:%v", err)
+		return
+	}
+}
+
+func tmplDemo(w http.ResponseWriter, r *http.Request) {
+	tmpl, err := template.ParseFiles("./t.tmpl", "./ul.tmpl")
+	if err != nil {
+		fmt.Println("create template failed, err:", err)
+		return
+	}
+	user := UserInfo{Name: "小王子", Gender: "男", Age: 18}
+	tmpl.Execute(w, user)
 }
